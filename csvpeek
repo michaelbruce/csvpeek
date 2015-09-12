@@ -60,8 +60,8 @@ Screen.new
 
 sample_file = csv_read('sample.csv')
 
-puts sample_file.headers.join(", ")
+puts sample_file.headers.join(" | ")
 puts '--------------------------------------------------------------------------------'
-sample_file.each{ |line| puts line.to_s }
+sample_file.each{ |line| puts line.to_h.values.join(" | ") }
 
 gets # stops program immediately exiting
