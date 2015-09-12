@@ -7,6 +7,7 @@
 #
 # 1. Get a fullscreen TTY - $stdout.write "#{CSI}2J"    # clear screen
 # 2. read csv
+# 3. calculate max width for header
 # 3. present in the style of more, vi bindings etc
 
 exec /usr/bin/env ruby --disable-gems -x "$0" $*
@@ -59,19 +60,33 @@ end
 class SheetRender
   def initialize(csv_data)
     @csv_data = csv_data
+    new_rows.each {|row| puts row.join(' | ')}
   end
 
-  def header
-    @csv_data.headers.join(" | ")
+  def new_rows
+    @csv_data.to_a.map do |row|
+      row.each_with_index.map do |cell, i|
+        format_cell(cell, max_column_width(i))
+      end
+    end
+
+    #this works
+    # @csv_data.to_a.map {|row| row.each_with_index.map {|cell, i| format_cell(cell, 50) } }
+  end
+
+  def rows
+    @csv_data.to_a do |column, i|
+      format_cell(column, max_column_width(i))
+    end.join(" | ")
   end
 
   def seperator
     '--------------------------------------------------------------------------------'
   end
 
-  def column_width(index)
+  def max_column_width(index)
     lengths = @csv_data.to_a.map { |line| line[index] }
-    lengths.max.length
+    lengths.map(&:length).max
   end
 
   def format_cell(value, column_width)
@@ -81,10 +96,6 @@ class SheetRender
   def line(line)
     line.join(" | ")
   end
-
-  def records
-    @csv_data.map{ |record| line(record.to_h.values) }
-  end
 end
 
 Screen.new
@@ -92,10 +103,10 @@ Screen.new
 sample_file = csv_read('sample.csv')
 render = SheetRender.new(sample_file)
 
-puts render.header
-puts render.seperator
-puts render.records
-
-puts render.column_width(0)
-
+# puts render.header
+# puts render.seperator
+# puts render.records
+#
+# puts render.max_column_width(0)
+#
 gets # stops program immediately exiting
