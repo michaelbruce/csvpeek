@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# vim: set ft=ruby:
+
+# First pass at a fullscreen terminal application,
+# based on Gary Bernhardt's selecta
+# http://graysoftinc.com/terminal-tricks/random-access-terminal
+#
+# 1. Get a fullscreen TTY - $stdout.write "#{CSI}2J"    # clear screen
+# 2. read csv
+# 3. present in the style of more, vi bindings etc
+
+exec /usr/bin/env ruby --disable-gems -x "$0" $*
+#!ruby
+# --------------------------------------------------------------------------------
+
+CSI = "\e["
+
+# $stdout.write "#{CSI}1;4H"  # move to line 1, character 4
+# $stdout.write "s"           # overwrite the 'z'
+
+class Screen
+  def initialize
+    clear_screen
+    gets
+  end
+
+  def clear_screen
+    $stdout.write "#{CSI}2J"    # clear screen
+    $stdout.write "#{CSI}1;1H"  # move to top left corner
+  end
+
+  def save_cursor_position
+    $stdout.write "#{CSI}s"     # save cursor position
+  end
+
+  def restore_cursor_position
+    $stdout.write "#{CSI}u"     # restore cursor position
+  end
+end
+
+Screen.new
