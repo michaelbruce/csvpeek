@@ -13,15 +13,33 @@ exec /usr/bin/env ruby --disable-gems -x "$0" $*
 #!ruby
 # --------------------------------------------------------------------------------
 
+require 'csv'
+
+KEY_CTRL_C = ?\C-c
+KEY_CTRL_N = ?\C-n
+KEY_CTRL_P = ?\C-p
+KEY_CTRL_U = ?\C-u
+KEY_CTRL_H = ?\C-h
+KEY_CTRL_W = ?\C-w
+KEY_CTRL_J = ?\C-j
+KEY_CTRL_M = ?\C-m
+KEY_DELETE = 127.chr # Equivalent to ?\C-?
 CSI = "\e["
 
 # $stdout.write "#{CSI}1;4H"  # move to line 1, character 4
 # $stdout.write "s"           # overwrite the 'z'
 
+def csv_read(filename)
+  CSV.read(
+      filename,
+      {headers: true,
+      encoding: 'utf-8',
+      converters: lambda { |value| (value.nil? || value.downcase == 'null') ? '' : value.strip }})
+end
+
 class Screen
   def initialize
     clear_screen
-    gets
   end
 
   def clear_screen
@@ -39,3 +57,8 @@ class Screen
 end
 
 Screen.new
+
+sample_file = csv_read('sample.csv')
+sample_file.each{ |line| puts line.to_s }
+
+gets # stops program immediately exiting
