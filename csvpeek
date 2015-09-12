@@ -69,8 +69,21 @@ class SheetRender
     '--------------------------------------------------------------------------------'
   end
 
-  def lines
-    @csv_data.map{ |line|  line.to_h.values.join(" | ") }
+  def column_width(index)
+    lengths = @csv_data.to_a.map { |line| line[index] }
+    lengths.max.length
+  end
+
+  def format_cell(value, column_width)
+    value + (' ' * (column_width - value.length))
+  end
+
+  def line(line)
+    line.join(" | ")
+  end
+
+  def records
+    @csv_data.map{ |record| line(record.to_h.values) }
   end
 end
 
@@ -81,6 +94,8 @@ render = SheetRender.new(sample_file)
 
 puts render.header
 puts render.seperator
-puts render.lines
+puts render.records
+
+puts render.column_width(0)
 
 gets # stops program immediately exiting
