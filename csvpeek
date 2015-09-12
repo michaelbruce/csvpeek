@@ -56,12 +56,31 @@ class Screen
   end
 end
 
+class SheetRender
+  def initialize(csv_data)
+    @csv_data = csv_data
+  end
+
+  def header
+    @csv_data.headers.join(" | ")
+  end
+
+  def seperator
+    '--------------------------------------------------------------------------------'
+  end
+
+  def lines
+    @csv_data.map{ |line|  line.to_h.values.join(" | ") }
+  end
+end
+
 Screen.new
 
 sample_file = csv_read('sample.csv')
+render = SheetRender.new(sample_file)
 
-puts sample_file.headers.join(" | ")
-puts '--------------------------------------------------------------------------------'
-sample_file.each{ |line| puts line.to_h.values.join(" | ") }
+puts render.header
+puts render.seperator
+puts render.lines
 
 gets # stops program immediately exiting
