@@ -18,7 +18,10 @@ require 'csv'
 require 'io/console'
 require "io/wait"
 
+raise 'No filename specified' if ARGV[0].nil?
+
 KEY_CTRL_A = ?\C-a
+KEY_CTRL_E = ?\C-e
 KEY_CTRL_C = ?\C-c
 KEY_CTRL_Q = ?\C-q
 KEY_CTRL_N = ?\C-n
@@ -45,7 +48,7 @@ class UserInput
           last_read = Time.now
           prompted  = false
           case char
-          when "0"
+          when ("0")
             $stdout.write "#{CSI}#{$screen.get_cursor_position[:row]};1H"
           when "$"
             $stdout.write "#{CSI}#{$screen.get_cursor_position[:row]};#{$terminal_width}H"
@@ -155,6 +158,7 @@ class StatusDisplay
   def self.show_bar
     $stdout.write "#{CSI}#{$terminal_height - 1};1H"
     $stdout.write "-" * $terminal_width
+    $screen.restore_cursor_position
   end
 
   def self.clear
@@ -163,8 +167,7 @@ class StatusDisplay
   end
 
   def self.clear_display
-    $screen.move_to_beginning_of_line
-    $screen.move_to_last_line
+    $stdout.write "#{CSI}#{$terminal_height};1H"
     $stdout.write " " * $terminal_width
     $screen.move_to_beginning_of_line
   end
@@ -213,8 +216,8 @@ $screen = Screen.new
 $terminal_width = `tput cols`.to_i
 $terminal_height = `tput lines`.to_i
 
-sample_file = csv_read('sample.csv')
-render = SheetRender.new(sample_file)
+file = csv_read(ARGV[0]) if ARGV[0].end_with?('.csv')
+render = SheetRender.new(file)
 
 render.pretty_output
 
