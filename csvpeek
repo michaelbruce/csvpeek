@@ -4,6 +4,7 @@
 # First pass at a fullscreen terminal application,
 # based on Gary Bernhardt's selecta
 # http://graysoftinc.com/terminal-tricks/random-access-terminal
+# http://misc.flogisoft.com/bash/tip_colors_and_formatting
 #
 # 1. Get a fullscreen TTY - $stdout.write "#{CSI}2J"    # clear screen
 # 2. read csv
@@ -50,13 +51,21 @@ class UserInput
             $stdout.write "#{CSI}A"
           when "l"
             $stdout.write "#{CSI}C"
+          when "?"
+            puts "I will display the keymap someday soon...\r\n"
+            puts "You typed:  #{char.inspect}\r\n"
+            # TODO display the keymap to the user
           when "q"
             exit
+          when ","
+            puts $screen.get_cursor_position
+          when ":"
+            $screen.move_to_last_line
+            print ':'
           else
             puts "You typed:  #{char.inspect}\r\n"
+            # TODO display message "You can clear this debug output with <ESC>"
           end
-          # puts "You typed:  #{char.inspect}\r\n"
-          # break if char == ?q
         else
           if !prompted && Time.now - last_read > 1
             # puts "Please type a character.\r\n"
@@ -87,12 +96,40 @@ class Screen
     $stdout.write "#{CSI}1;1H"  # move to top left corner
   end
 
+  def move_to_last_line
+    cursor = get_cursor_position
+    $stdout.write "#{CSI}#{($terminal_height - cursor[:row])}B"
+    $stdout.write "#{CSI}#{cursor[:column]}D"
+  end
+
   def save_cursor_position
     $stdout.write "#{CSI}s"     # save cursor position
   end
 
   def restore_cursor_position
     $stdout.write "#{CSI}u"     # restore cursor position
+  end
+
+  def get_cursor_position
+    res = ''
+    $stdin.raw do |stdin|
+      $stdout << "\e[6n"
+      $stdout.flush
+      while (c = stdin.getc) != 'R'
+        res << c if c
+      end
+    end
+    m = res.match /(?<row>\d+);(?<column>\d+)/
+    { row: Integer(m[:row]), column: Integer(m[:column]) }
+  end
+end
+
+class StatusDisplay
+  def self.write(message)
+    $screen.save_cursor_position
+    $screen.move_to_last_line
+    print message
+    $screen.restore_cursor_position
   end
 end
 
@@ -134,7 +171,7 @@ class SheetRender
   end
 end
 
-Screen.new
+$screen = Screen.new
 
 sample_file = csv_read('sample.csv')
 render = SheetRender.new(sample_file)
@@ -143,4 +180,6 @@ render.pretty_output
 
 IO.console
 # gets # stops program immediately exiting
+$terminal_height = `tput cols`.to_i
+StatusDisplay.write('CSV File Loaded')
 UserInput.new
