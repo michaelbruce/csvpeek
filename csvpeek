@@ -18,6 +18,7 @@ require 'csv'
 require 'io/console'
 require "io/wait"
 
+KEY_CTRL_A = ?\C-a
 KEY_CTRL_C = ?\C-c
 KEY_CTRL_Q = ?\C-q
 KEY_CTRL_N = ?\C-n
@@ -44,6 +45,10 @@ class UserInput
           last_read = Time.now
           prompted  = false
           case char
+          when "0"
+            $stdout.write "#{CSI}#{$screen.get_cursor_position[:row]};1H"
+          when "$"
+            $stdout.write "#{CSI}#{$screen.get_cursor_position[:row]};#{$terminal_width}H"
           when "h"
             $stdout.write "#{CSI}D"
           when "j"
