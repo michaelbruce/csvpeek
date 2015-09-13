@@ -108,7 +108,7 @@ class Screen
   end
 
   def move_to_last_line
-    $stdout.write "#{CSI}#{($terminal_height - get_cursor_position[:row])}B"
+    $stdout.write "#{CSI}#{($terminal_width - get_cursor_position[:row])}B"
   end
 
   def save_cursor_position
@@ -147,6 +147,11 @@ class StatusDisplay
     $screen.restore_cursor_position
   end
 
+  def self.show_bar
+    $stdout.write "#{CSI}#{$terminal_height - 1};1H"
+    $stdout.write "-" * $terminal_width
+  end
+
   def self.clear
     clear_display
     $screen.restore_cursor_position
@@ -155,7 +160,7 @@ class StatusDisplay
   def self.clear_display
     $screen.move_to_beginning_of_line
     $screen.move_to_last_line
-    $stdout.write " " * $terminal_height
+    $stdout.write " " * $terminal_width
     $screen.move_to_beginning_of_line
   end
 end
@@ -174,7 +179,7 @@ class SheetRender
   end
 
   def seperator
-    '--------------------------------------------------------------------------------'
+    "-" * $terminal_width
   end
 
   def max_column_width(index)
@@ -200,6 +205,9 @@ end
 
 $screen = Screen.new
 
+$terminal_width = `tput cols`.to_i
+$terminal_height = `tput lines`.to_i
+
 sample_file = csv_read('sample.csv')
 render = SheetRender.new(sample_file)
 
@@ -207,6 +215,6 @@ render.pretty_output
 
 IO.console
 # gets # stops program immediately exiting
-$terminal_height = `tput cols`.to_i
 StatusDisplay.write('CSV File Loaded')
+StatusDisplay.show_bar
 UserInput.new
