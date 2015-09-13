@@ -19,6 +19,7 @@ require 'io/console'
 require "io/wait"
 
 KEY_CTRL_C = ?\C-c
+KEY_CTRL_Q = ?\C-q
 KEY_CTRL_N = ?\C-n
 KEY_CTRL_P = ?\C-p
 KEY_CTRL_U = ?\C-u
@@ -52,18 +53,19 @@ class UserInput
           when "l"
             $stdout.write "#{CSI}C"
           when "?"
-            puts "I will display the keymap someday soon...\r\n"
-            puts "You typed:  #{char.inspect}\r\n"
             # TODO display the keymap to the user
+            StatusDisplay.write "I will display the keymap someday soon..."
           when "q"
-            exit
+            StatusDisplay.write "Are you sure you want to quit? (y or n)"
+            char = io.sysread(1)
+            $screen.close if char == "y"
           when ","
             puts $screen.get_cursor_position
           when ":"
             $screen.move_to_last_line
             print ':'
           else
-            puts "You typed:  #{char.inspect}\r\n"
+            StatusDisplay.write "You typed:  #{char.inspect}"
             # TODO display message "You can clear this debug output with <ESC>"
           end
         else
@@ -96,6 +98,10 @@ class Screen
     $stdout.write "#{CSI}1;1H"  # move to top left corner
   end
 
+  def move_to_beginning_of_line
+    $stdout.write "#{CSI}#{get_cursor_position[:column]}D"
+  end
+
   def move_to_last_line
     cursor = get_cursor_position
     $stdout.write "#{CSI}#{($terminal_height - cursor[:row])}B"
@@ -122,13 +128,20 @@ class Screen
     m = res.match /(?<row>\d+);(?<column>\d+)/
     { row: Integer(m[:row]), column: Integer(m[:column]) }
   end
+
+  def close
+    move_to_last_line
+    exit
+  end
 end
 
 class StatusDisplay
   def self.write(message)
     $screen.save_cursor_position
     $screen.move_to_last_line
-    print message
+    $stdout.write " " * $terminal_height
+    $screen.move_to_beginning_of_line
+    $stdout.write message
     $screen.restore_cursor_position
   end
 end
