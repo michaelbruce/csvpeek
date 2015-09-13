@@ -58,11 +58,11 @@ class UserInput
           # puts "You typed:  #{char.inspect}\r\n"
           # break if char == ?q
         else
-          if !prompted && Time.now - last_read > 3
-            puts "Please type a character.\r\n"
+          if !prompted && Time.now - last_read > 1
+            # puts "Please type a character.\r\n"
             prompted = true
           end
-          sleep 0.1
+          sleep 1.0/24.0
         end
       end
     end
