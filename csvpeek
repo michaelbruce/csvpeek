@@ -58,10 +58,15 @@ class UserInput
           when "q"
             StatusDisplay.write "Are you sure you want to quit? (y or n)"
             char = io.sysread(1)
-            $screen.close if char == "y"
+            if char == "y"
+              $screen.close
+            else
+              StatusDisplay.clear
+            end
           when ","
             puts $screen.get_cursor_position
           when ":"
+            $screen.move_to_beginning_of_line
             $screen.move_to_last_line
             print ':'
           else
@@ -103,9 +108,7 @@ class Screen
   end
 
   def move_to_last_line
-    cursor = get_cursor_position
-    $stdout.write "#{CSI}#{($terminal_height - cursor[:row])}B"
-    $stdout.write "#{CSI}#{cursor[:column]}D"
+    $stdout.write "#{CSI}#{($terminal_height - get_cursor_position[:row])}B"
   end
 
   def save_cursor_position
@@ -130,6 +133,7 @@ class Screen
   end
 
   def close
+    move_to_beginning_of_line
     move_to_last_line
     exit
   end
@@ -138,11 +142,21 @@ end
 class StatusDisplay
   def self.write(message)
     $screen.save_cursor_position
+    clear_display
+    $stdout.write message
+    $screen.restore_cursor_position
+  end
+
+  def self.clear
+    clear_display
+    $screen.restore_cursor_position
+  end
+
+  def self.clear_display
+    $screen.move_to_beginning_of_line
     $screen.move_to_last_line
     $stdout.write " " * $terminal_height
     $screen.move_to_beginning_of_line
-    $stdout.write message
-    $screen.restore_cursor_position
   end
 end
 
