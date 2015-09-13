@@ -14,6 +14,8 @@ exec /usr/bin/env ruby --disable-gems -x "$0" $*
 # --------------------------------------------------------------------------------
 
 require 'csv'
+require 'io/console'
+require "io/wait"
 
 KEY_CTRL_C = ?\C-c
 KEY_CTRL_N = ?\C-n
@@ -28,6 +30,40 @@ CSI = "\e["
 
 # $stdout.write "#{CSI}1;4H"  # move to line 1, character 4
 # $stdout.write "s"           # overwrite the 'z'
+
+class UserInput
+  def initialize
+    $stdin.raw do |io|
+      last_read = Time.now
+      prompted  = false
+      loop do
+        char = io.ready? && io.sysread(1)
+        if char
+          last_read = Time.now
+          prompted  = false
+          case char
+          when "k"
+            $stdout.write "#{CSI}A"
+          when "j"
+            $stdout.write "#{CSI}B"
+          when "q"
+            exit
+          else
+            puts "You typed:  #{char.inspect}\r\n"
+          end
+          # puts "You typed:  #{char.inspect}\r\n"
+          # break if char == ?q
+        else
+          if !prompted && Time.now - last_read > 3
+            puts "Please type a character.\r\n"
+            prompted = true
+          end
+          sleep 0.1
+        end
+      end
+    end
+  end
+end
 
 def csv_read(filename)
   CSV.read(
@@ -101,4 +137,6 @@ render = SheetRender.new(sample_file)
 
 render.pretty_output
 
-gets # stops program immediately exiting
+IO.console
+# gets # stops program immediately exiting
+UserInput.new
