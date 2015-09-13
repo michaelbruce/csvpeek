@@ -42,10 +42,14 @@ class UserInput
           last_read = Time.now
           prompted  = false
           case char
-          when "k"
-            $stdout.write "#{CSI}A"
+          when "h"
+            $stdout.write "#{CSI}D"
           when "j"
             $stdout.write "#{CSI}B"
+          when "k"
+            $stdout.write "#{CSI}A"
+          when "l"
+            $stdout.write "#{CSI}C"
           when "q"
             exit
           else
